@@ -1,5 +1,6 @@
 let translatedText = "";
 
+// تحميل ملف SRT
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -8,6 +9,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     reader.readAsText(e.target.files[0]);
 });
 
+// ترجمة دفعة واحدة
 async function translateBatch(lines) {
     const source = document.getElementById("sourceLang").value;
     const target = document.getElementById("targetLang").value;
@@ -25,9 +27,19 @@ async function translateBatch(lines) {
     });
 
     const data = await res.json();
+
+    // 👇 مهم: نشوف وش رجع API
+    console.log("API response:", data);
+
+    // 👇 حماية من الخطأ
+    if (!data || !data.translatedText) {
+        throw new Error("No translation returned from API");
+    }
+
     return data.translatedText.split("\n");
 }
 
+// الترجمة
 async function translateSRT() {
     const input = document.getElementById('inputText').value;
     const lines = input.split("\n");
@@ -36,13 +48,17 @@ async function translateSRT() {
     let mapIndex = [];
 
     lines.forEach((line, i) => {
-        if (line.trim() !== "" && !line.match(/^\d+$/) && !line.includes("-->")) {
+        if (
+            line.trim() !== "" &&
+            !line.match(/^\d+$/) &&
+            !line.includes("-->")
+        ) {
             textLines.push(line);
             mapIndex.push(i);
         }
     });
 
-    document.getElementById("status").innerText = "Translating...";
+    document.getElementById("status").innerText = "⏳ جاري الترجمة...";
     document.getElementById("progressBar").value = 30;
 
     try {
@@ -56,12 +72,16 @@ async function translateSRT() {
         document.getElementById('outputText').value = translatedText;
 
         document.getElementById("progressBar").value = 100;
-        document.getElementById("status").innerText = "Done!";
+        document.getElementById("status").innerText = "✅ تمت الترجمة!";
     } catch (e) {
-        document.getElementById("status").innerText = "Error";
+        console.error("Translation error:", e);
+
+        document.getElementById("status").innerText =
+            "❌ فشل الترجمة — تحقق من API أو الشبكة";
     }
 }
 
+// تحميل الملف
 function downloadSRT() {
     const blob = new Blob([translatedText], { type: "text/plain" });
     const link = document.createElement("a");
