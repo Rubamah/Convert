@@ -4,30 +4,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text, source, target } = req.body;
+    const { text, target } = req.body;
 
-    // لو المستخدم اختار Auto نخليه English افتراضي
-    const from = source === "auto" ? "en" : source;
-
-    const url = "https://api.mymemory.translated.net/get?q="
-      + encodeURIComponent(text)
-      + "&langpair=" + from + "|" + target;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
 
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log("API response:", data);
+    let translated = "";
 
-    if (!data || !data.responseData) {
-      return res.status(500).json({ error: "No translation returned" });
-    }
+    data[0].forEach(item => {
+      translated += item[0];
+    });
 
     return res.status(200).json({
-      translatedText: data.responseData.translatedText
+      translatedText: translated
     });
 
   } catch (error) {
-    console.error("Server error:", error);
+    console.error(error);
     return res.status(500).json({ error: "Translation failed" });
   }
 }
