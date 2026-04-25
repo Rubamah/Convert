@@ -6,24 +6,28 @@ export default async function handler(req, res) {
   try {
     const { text, source, target } = req.body;
 
-    const response = await fetch("https://libretranslate.de/translate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        q: text,
-        source: source,
-        target: target,
-        format: "text"
-      })
-    });
+    // لو المستخدم اختار Auto نخليه English افتراضي
+    const from = source === "auto" ? "en" : source;
 
+    const url = "https://api.mymemory.translated.net/get?q="
+      + encodeURIComponent(text)
+      + "&langpair=" + from + "|" + target;
+
+    const response = await fetch(url);
     const data = await response.json();
 
-    return res.status(200).json(data);
+    console.log("API response:", data);
+
+    if (!data || !data.responseData) {
+      return res.status(500).json({ error: "No translation returned" });
+    }
+
+    return res.status(200).json({
+      translatedText: data.responseData.translatedText
+    });
 
   } catch (error) {
+    console.error("Server error:", error);
     return res.status(500).json({ error: "Translation failed" });
   }
 }
