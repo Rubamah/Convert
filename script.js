@@ -14,7 +14,9 @@ async function translateBatch(lines) {
     const source = document.getElementById("sourceLang").value;
     const target = document.getElementById("targetLang").value;
 
-    const res = await fetch("/api/translate", {
+    const url = window.location.origin + "/api/translate";
+
+    const res = await fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -28,12 +30,10 @@ async function translateBatch(lines) {
 
     const data = await res.json();
 
-    // 👇 مهم: نشوف وش رجع API
     console.log("API response:", data);
 
-    // 👇 حماية من الخطأ
     if (!data || !data.translatedText) {
-        throw new Error("No translation returned from API");
+        throw new Error("No translation returned");
     }
 
     return data.translatedText.split("\n");
@@ -75,9 +75,8 @@ async function translateSRT() {
         document.getElementById("status").innerText = "✅ تمت الترجمة!";
     } catch (e) {
         console.error("Translation error:", e);
-
         document.getElementById("status").innerText =
-            "❌ فشل الترجمة — تحقق من API أو الشبكة";
+            "❌ فشل الترجمة — تحقق من API أو الاتصال";
     }
 }
 
