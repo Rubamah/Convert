@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { text, source, target } = req.body;
 
-    const response = await fetch("https://translate.argosopentech.com/translate", {
+    const response = await fetch("https://libretranslate.de/translate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
