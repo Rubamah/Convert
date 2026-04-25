@@ -1,0 +1,1471 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crash Cart Tracker</title>
+
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0A1024;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.18);
+      --text:#EAF0FF;
+      --muted:#A9B4D6;
+      --muted2:#7E8AB5;
+
+      --blue:#7DD3FC;
+      --blue2:#38BDF8;
+      --violet:#A78BFA;
+
+      --green:#22C55E;
+      --red:#EF4444;
+      --amber:#F59E0B;
+      --gray:#94A3B8;
+
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:var(--font);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,.25), transparent 55%),
+        radial-gradient(1000px 520px at 100% 10%, rgba(167,139,250,.22), transparent 55%),
+        radial-gradient(900px 520px at 40% 110%, rgba(34,197,94,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+    }
+
+    /* Top bar */
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(7,10,18,.82), rgba(7,10,18,.55));
+      border-bottom: 1px solid var(--stroke);
+    }
+    .topbar{
+      max-width:1200px; margin:0 auto;
+      padding:14px 18px;
+      display:flex; align-items:center; gap:12px; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 220px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(125,211,252,.9), transparent 70%),
+        radial-gradient(18px 18px at 70% 70%, rgba(167,139,250,.85), transparent 70%),
+        linear-gradient(145deg, rgba(56,189,248,.35), rgba(167,139,250,.28));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+    }
+    .brand h1{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.4px;
+      font-weight:800;
+    }
+    .brand .sub{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.2px;
+    }
+
+    .tabs{
+      display:flex; gap:8px; align-items:center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--stroke);
+      padding:6px; border-radius: 999px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
+    }
+    .tab{
+      appearance:none; border:0; cursor:pointer;
+      background: transparent;
+      color: var(--muted);
+      padding:10px 14px;
+      border-radius: 999px;
+      font-weight:700;
+      letter-spacing:.2px;
+      transition: .2s ease;
+      white-space: nowrap;
+    }
+    .tab.active{
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(125,211,252,.18), rgba(56,189,248,.10));
+      box-shadow: inset 0 0 0 1px rgba(125,211,252,.25);
+    }
+
+    .actions{
+      display:flex; gap:8px; align-items:center;
+      min-width: 220px; justify-content:flex-end;
+    }
+    .btn{
+      appearance:none; border:1px solid var(--stroke); cursor:pointer;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-weight:700;
+      letter-spacing:.2px;
+      transition: .18s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: var(--stroke2); }
+    .btn.primary{
+      border-color: rgba(125,211,252,.28);
+      background: linear-gradient(180deg, rgba(56,189,248,.18), rgba(56,189,248,.08));
+    }
+    .btn.danger{
+      border-color: rgba(239,68,68,.28);
+      background: linear-gradient(180deg, rgba(239,68,68,.16), rgba(239,68,68,.06));
+    }
+
+    main{ max-width:1200px; margin:0 auto; padding:18px; }
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 1.2fr .8fr; }
+    }
+
+    /* Cards */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.05));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .cardHeader{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 12px;
+    }
+    .title{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.25px;
+    }
+    .hint{
+      margin:0;
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    /* Form */
+    .sectionLabel{
+      display:flex; align-items:center; justify-content:space-between;
+      margin: 12px 0 8px;
+    }
+    .sectionLabel .pill{
+      font-size:11px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+    }
+
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    @media (min-width: 720px){
+      .formGrid.two{ grid-template-columns: 1fr 1fr; }
+      .formGrid.three{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin: 0 0 6px;
+      letter-spacing:.15px;
+    }
+    input, select{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(7,10,18,.55);
+      color: var(--text);
+      outline:none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    input::placeholder{ color: rgba(169,180,214,.55); }
+    input:focus, select:focus{
+      border-color: rgba(125,211,252,.38);
+      box-shadow: 0 0 0 4px rgba(56,189,248,.12), inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+
+    .mono{ font-family: var(--mono); letter-spacing:.2px; }
+
+    .rowActions{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+      padding-top: 10px;
+      border-top: 1px solid var(--stroke);
+      margin-top: 12px;
+    }
+
+    /* Alerts */
+    .alertsList{
+      display:flex; flex-direction:column; gap:8px;
+      margin-top: 10px;
+    }
+    .alertItem{
+      border:1px solid var(--stroke);
+      background: rgba(7,10,18,.45);
+      border-radius: 14px;
+      padding:10px 10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      margin-top:4px;
+      background: var(--gray);
+      box-shadow: 0 0 0 4px rgba(148,163,184,.12);
+      flex: 0 0 auto;
+    }
+    .dot.red{ background: var(--red); box-shadow: 0 0 0 4px rgba(239,68,68,.12); }
+    .dot.amber{ background: var(--amber); box-shadow: 0 0 0 4px rgba(245,158,11,.12); }
+    .alertText{
+      font-size:12px;
+      line-height:1.35;
+      color: var(--text);
+    }
+    .alertMeta{
+      font-size:11px;
+      color: var(--muted2);
+      margin-top:2px;
+    }
+
+    /* Report */
+    .filters{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top: 10px;
+    }
+    @media (min-width: 900px){
+      .filters{ grid-template-columns: repeat(4, 1fr); }
+    }
+    .filters .span2{ grid-column: span 2; }
+    .filters .span4{ grid-column: span 4; }
+
+    .tableWrap{
+      margin-top:12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      overflow:auto;
+      background: rgba(7,10,18,.35);
+      box-shadow: var(--shadow);
+    }
+    table{ width:100%; border-collapse:collapse; min-width: 1100px; }
+    thead th{
+      position: sticky; top:0;
+      background: rgba(7,10,18,.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--stroke2);
+      padding: 12px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align:left;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+    tbody td{
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 11px 10px;
+      font-size: 12px;
+      color: var(--text);
+      white-space:nowrap;
+    }
+    tbody tr:hover td{ background: rgba(56,189,248,.05); }
+
+    .ccPill{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-weight: 900;
+      letter-spacing:.3px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+    }
+    /* ONLY crash cart number gets color */
+    .cc-green{ color: var(--green); border-color: rgba(34,197,94,.28); background: rgba(34,197,94,.08); }
+    .cc-gray{  color: var(--gray);  border-color: rgba(148,163,184,.22); background: rgba(148,163,184,.08); }
+    .cc-amber{ color: var(--amber); border-color: rgba(245,158,11,.28); background: rgba(245,158,11,.10); }
+    .cc-red{   color: var(--red);   border-color: rgba(239,68,68,.30); background: rgba(239,68,68,.10); }
+
+    .reportFooter{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-top: 12px;
+    }
+    .smallMuted{ font-size:12px; color: var(--muted); }
+    .pager{
+      display:flex; gap:10px; align-items:center;
+    }
+    .badge{
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge b{ color: var(--text); }
+
+    .hidden{ display:none !important; }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(7,10,18,.92);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      border-radius: 999px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 12px;
+      display:none;
+      z-index: 999;
+      max-width: min(720px, 92vw);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Print */
+    @media print{
+      header, .noPrint, .toast{ display:none !important; }
+      body{ background:#fff !important; color:#000 !important; }
+      .card{ border:none !important; box-shadow:none !important; background:#fff !important; }
+      .tableWrap{ border:none !important; box-shadow:none !important; }
+      thead th{ position: static !important; background:#fff !important; color:#000 !important; border-bottom:1px solid #ddd !important; }
+      tbody td{ color:#000 !important; border-bottom:1px solid #eee !important; }
+      .ccPill{ border:1px solid #ddd !important; background:#fff !important; }
+      .cc-green,.cc-gray,.cc-amber,.cc-red{ color:#000 !important; }
+      table{ min-width: 0 !important; }
+      tr, td, th { break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+<header class="noPrint">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Crash Cart Tracker</h1>
+        <p class="sub">Scan/Type crash & badges</p>
+      </div>
+    </div>
+
+    <!-- Cart tabs (separate datasets/reports) -->
+    <div class="tabs" aria-label="Cart tabs">
+      <button class="tab active" id="cartCrash" type="button">Crash Cart</button>
+      <button class="tab" id="cartAna" type="button">Anaphylactic cart</button>
+      <button class="tab" id="cartCode" type="button">Code blue box</button>
+    </div>
+
+    <!-- View tabs -->
+    <div class="tabs" aria-label="View tabs">
+      <button class="tab active" id="tabEntry" type="button">Entry</button>
+      <button class="tab" id="tabReport" type="button">Report</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="btnPrint" type="button">Print</button>
+      <button class="btn danger" id="btnWipe" type="button">Wipe All</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ENTRY VIEW -->
+  <section id="viewEntry">
+    <div class="grid">
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <h2 class="title">Entry</h2>
+            <p class="hint">Exchange is required by default. Use the checkbox only if no crash was sent.</p>
+          </div>
+          <div class="sectionLabel">
+            <span class="pill" id="syncPill">Realtime sync</span>
+          </div>
+        </div>
+
+        <!-- Common fields (shared for both Sent + Return) -->
+        <div class="formGrid three">
+          <div>
+            <label for="nurseLocation">Nurse Location</label>
+            <input id="nurseLocation" list="locationList" placeholder="Type location…" autocomplete="off" />
+          </div>
+          <div>
+            <label for="pharmacistBadge">Pharmacist Badge</label>
+            <input id="pharmacistBadge" class="mono" placeholder="Scan or type badge…" />
+          </div>
+          <div>
+            <label for="nurseBadge">Nurse Badge</label>
+            <input id="nurseBadge" class="mono" placeholder="Scan or type badge…" />
+          </div>
+        </div>
+
+        <div class="sectionLabel">
+          <div class="pill">Exchange</div>
+          <label style="display:flex;gap:10px;align-items:center;margin:0;">
+            <input type="checkbox" id="noCrashSent" />
+            No crash sent in return
+          </label>
+        </div>
+
+        <!-- Two boxes: Sent + Return (no action dropdown) -->
+        <div class="formGrid two">
+          <!-- SENT -->
+          <div class="card" style="margin:0; box-shadow:none;">
+            <div class="cardHeader" style="margin-bottom:10px;">
+              <div>
+                <h2 class="title">Sent</h2>
+                <p class="hint">Required for exchange (unless checkbox is enabled).</p>
+              </div>
+            </div>
+
+            <div class="formGrid">
+              <div>
+                <label for="sentCrashCart">Sent Crash Cart</label>
+                <input id="sentCrashCart" class="mono" placeholder="Scan or type sent crash cart…" />
+              </div>
+
+              <div>
+                <label for="medExpiryRow">Medication + Expiry</label>
+                <div class="formGrid two" style="gap:10px">
+                  <select id="firstMedication" aria-label="First medication to expire">
+                    <option value="">Select medication…</option>
+                    <option>Amiodarone 150mg/3ml</option>
+                    <option>Epinephrine 1mg/10m(0.1g/ml)</option>
+                    <option>Epinephrine 1mg/mL</option>
+                    <option>Adenosine 6 mg/2ml</option>
+                    <option>Calcium Chloride 10%</option>
+                    <option>Sodium Bicarbonate 4.2g/50ml</option>
+                    <option>Dextrose 50%</option>
+                    <option>Lidocaine 2% (100mg/5ml)</option>
+                    <option>Atropine 1mg/10ml</option>
+                    <option>Atropine 500mcg or 600mcg/ml</option>
+                    <option>Water for Injection</option>
+                  </select>
+
+                  <input id="expiryDate" type="date" aria-label="Expiry date for selected medication" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RETURN -->
+          <div class="card" style="margin:0; box-shadow:none;">
+            <div class="cardHeader" style="margin-bottom:10px;">
+              <div>
+                <h2 class="title">Return</h2>
+                <p class="hint">Always required.</p>
+              </div>
+            </div>
+
+            <div class="formGrid">
+              <div>
+                <label for="returnCrashCart">Return Crash Cart</label>
+                <input id="returnCrashCart" class="mono" placeholder="Scan or type return crash cart…" />
+              </div>
+              <div>
+                <label for="returnReason">Return Reason</label>
+                <select id="returnReason">
+                  <option value="">Select…</option>
+                  <option value="used">Used</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rowActions noPrint">
+          <button class="btn" id="btnRefresh" type="button">Refresh</button>
+          <button class="btn" id="btnClear" type="button">Clear</button>
+          <button class="btn primary" id="btnSave" type="button">Save</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <h2 class="title">Expiry Alerts</h2>
+            <p class="hint">Based on latest status per crash cart: <b>Orange ≤30 days</b>, <b>Red ≤7 days</b>, <b>Expired (today or earlier)</b>.</p>
+          </div>
+          <div class="sectionLabel">
+            <span class="pill">Auto-updated</span>
+          </div>
+        </div>
+
+        <div class="alertsList" id="alertsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORT VIEW -->
+  <section id="viewReport" class="hidden">
+    <div class="card">
+      <div class="cardHeader">
+        <div>
+          <h2 class="title">Report</h2>
+          <p class="hint">This report is for the selected tab only. Color appears <b>only</b> on the Crash Cart number.</p>
+        </div>
+        <div class="sectionLabel">
+          <span class="pill">20 per page</span>
+        </div>
+      </div>
+
+      <div class="noPrint">
+        <div class="filters">
+          <div>
+            <label for="fCrash">Crash Cart</label>
+            <input id="fCrash" class="mono" placeholder="e.g. 24" />
+          </div>
+
+          <div>
+            <label for="fAction">Type</label>
+            <select id="fAction">
+              <option value="">All</option>
+              <option value="sent">Sent</option>
+              <option value="return">Return</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="fLocation">Location</label>
+            <input id="fLocation" placeholder="Type to filter…" autocomplete="off" />
+          </div>
+
+          <div>
+            <label for="fBadge">Badge (any)</label>
+            <input id="fBadge" class="mono" placeholder="badge number" />
+          </div>
+
+          <div>
+            <label for="fReturnReason">Return Reason</label>
+            <select id="fReturnReason">
+              <option value="">All</option>
+              <option value="used">Used</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="fMedication">Medication</label>
+            <select id="fMedication">
+              <option value="">All</option>
+              <option>Amiodarone 150mg/3ml</option>
+              <option>Epinephrine 1mg/10m(0.1g/ml)</option>
+              <option>Epinephrine 1mg/mL</option>
+              <option>Adenosine 6 mg/2ml</option>
+              <option>Calcium Chloride 10%</option>
+              <option>Sodium Bicarbonate 4.2g/50ml</option>
+              <option>Dextrose 50%</option>
+              <option>Lidocaine 2% (100mg/5ml)</option>
+              <option>Atropine 1mg/10ml</option>
+              <option>Atropine 500mcg or 600mcg/ml</option>
+              <option>Water for Injection</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="fExpiryOn">Medication Expiry (on)</label>
+            <input id="fExpiryOn" type="date" />
+          </div>
+
+          <div>
+            <label for="fExpiryStatus">Expiry Status</label>
+            <select id="fExpiryStatus">
+              <option value="">All</option>
+              <option value="expired">Expired (≤0d)</option>
+              <option value="red">Red (≤7d)</option>
+              <option value="amber">Orange (≤30d)</option>
+              <option value="notsoon">Not Soon (&gt;30d)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="fFrom">Record Date From</label>
+            <input id="fFrom" type="date" />
+          </div>
+
+          <div>
+            <label for="fTo">Record Date To</label>
+            <input id="fTo" type="date" />
+          </div>
+
+          <div>
+            <label for="pageSize">Rows / page</label>
+            <select id="pageSize">
+              <option value="20" selected>20</option>
+              <option value="10">10</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <div class="span4" style="display:flex; gap:10px; justify-content:flex-end; align-items:end;">
+            <button class="btn" id="btnResetFilters" type="button">Reset Filters</button>
+            <button class="btn primary" id="btnPrintReport" type="button">Print Report</button>
+            <button class="btn" id="btnExportCsv" type="button">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="reportFooter" style="margin-top:12px;">
+          <div class="badge"><span class="dot" style="width:8px;height:8px"></span>Available (Return): <b id="sumAvailable">0</b></div>
+          <div class="badge"><span class="dot" style="width:8px;height:8px;background:var(--gray);box-shadow:0 0 0 4px rgba(148,163,184,.12)"></span>Sent: <b id="sumSent">0</b></div>
+          <div class="badge"><span class="dot amber" style="width:8px;height:8px"></span>Orange (≤30d): <b id="sumAmber">0</b></div>
+          <div class="badge"><span class="dot red" style="width:8px;height:8px"></span>Red/Expired (≤7d): <b id="sumRed">0</b></div>
+          <div class="smallMuted" id="resultCount">0 results</div>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th data-key="timestamp">Date/Time</th>
+              <th data-key="crashNumber">Crash Cart</th>
+              <th data-key="action">Type</th>
+              <th data-key="location">Location</th>
+              <th data-key="pharmacistBadge">Pharmacist</th>
+              <th data-key="nurseBadge">Nurse</th>
+              <th data-key="firstMedication">Medication</th>
+              <th data-key="expiryDate">Medication Expiry</th>
+              <th data-key="returnReason">Return Reason</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="reportFooter noPrint">
+        <div class="smallMuted" id="pageMeta">Page 1</div>
+        <div class="pager">
+          <button class="btn" id="btnPrev" type="button">Prev</button>
+          <span class="badge">Page <b id="pageLabel">1</b></span>
+          <button class="btn" id="btnNext" type="button">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Location list (free text allowed; this only suggests options) -->
+  <datalist id="locationList">
+    <option value="Emergency Department"></option>
+    <option value="CSSD"></option>
+    <option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option>
+    <option value="5"></option><option value="6"></option><option value="7"></option><option value="8"></option>
+    <option value="9"></option>
+    <option value="10 PEDIA"></option>
+    <option value="10 ADULT"></option>
+    <option value="AMU"></option>
+    <option value="11"></option><option value="12"></option><option value="13"></option>
+    <option value="14"></option><option value="14-A ROYAL"></option><option value="14-B ROYAL"></option>
+    <option value="15"></option><option value="16"></option><option value="17"></option>
+    <option value="18 ROYAL"></option>
+    <option value="20"></option><option value="22"></option><option value="23"></option><option value="24"></option><option value="25"></option>
+    <option value="L&D"></option>
+    <option value="MFMU"></option>
+    <option value="ICU1"></option><option value="ICU2"></option><option value="ICU3"></option><option value="ICU4"></option>
+    <option value="BU"></option>
+    <option value="MAIN - OR"></option>
+    <option value="MAIN - RR"></option>
+    <option value="Endoscopy"></option>
+    <option value="DSU"></option>
+    <option value="Neuroscience and Trauma Care Center"></option>
+    <option value="Ward 28 (TICU)"></option>
+    <option value="Ward 40 (Station 1)"></option>
+    <option value="Ward 40 (Station 2)"></option>
+    <option value="Ward 41 (Station 1)"></option>
+    <option value="Ward 41 (Station 2)"></option>
+    <option value="KFCC Center"></option>
+    <option value="C26 Surgical"></option>
+    <option value="C26 Cardiology"></option>
+    <option value="PCICU"></option>
+    <option value="C27"></option>
+    <option value="ACICU"></option>
+    <option value="MCCU - CCU"></option>
+    <option value="Cathlab / Cardiac Day"></option>
+    <option value="Cardiac - OR"></option>
+    <option value="Cardiac - RR"></option>
+  </datalist>
+</main>
+
+<div class="toast noPrint" id="toast"></div>
+
+<!-- Firebase Realtime Database (Module CDN) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4wEKzPhnvXv-oIoMchxnGFMXxx4YYQws",
+    authDomain: "crash-cart-aff89.firebaseapp.com",
+    databaseURL: "https://crash-cart-aff89-default-rtdb.firebaseio.com",
+    projectId: "crash-cart-aff89",
+    storageBucket: "crash-cart-aff89.firebasestorage.app",
+    messagingSenderId: "1039772978964",
+    appId: "1:1039772978964:web:1593628f5198dab33c7c01"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Optional: anonymous auth (works if enabled; safe to ignore if blocked)
+  try{
+    const auth = getAuth(app);
+    await signInAnonymously(auth);
+  }catch(e){ /* ignore */ }
+
+  const PATHS = {
+    crash: "crashCart/logs",
+    ana: "anaphylacticCart/logs",
+    code: "codeBlueBox/logs"
+  };
+
+  window._firebase = {
+    setCart(cartKey){ window._firebase.cartKey = cartKey; },
+    cartKey: "crash",
+    getPath(){ return PATHS[window._firebase.cartKey] || PATHS.crash; },
+    async add(record){
+      const newRef = push(ref(db, window._firebase.getPath()));
+      await set(newRef, record);
+    },
+    listen(cb){
+      // returns unsubscribe
+      return onValue(ref(db, window._firebase.getPath()), snap => {
+        const data = snap.val() || {};
+        const rows = Object.entries(data).map(([k,v]) => ({ _key:k, ...v }));
+        rows.sort((a,b)=> (b.timestamp||"").localeCompare(a.timestamp||""));
+        cb(rows);
+      });
+    },
+    async wipe(){
+      await remove(ref(db, window._firebase.getPath()));
+    }
+  };
+</script>
+
+<script>
+  /********************
+   * Utils
+   ********************/
+  const $ = (id)=>document.getElementById(id);
+
+  const ORANGE_DAYS = 30;
+  const RED_DAYS = 7;
+
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(toast._tm);
+    toast._tm = setTimeout(()=> t.style.display="none", 2300);
+  }
+
+  function digitsOnly(s){
+    return (s || "").match(/\d+/g)?.join("") || "";
+  }
+
+  function isoNow(){
+    return new Date().toISOString();
+  }
+
+  function yyyyMmDd(d){
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth()+1).padStart(2,"0");
+    const da = String(x.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function daysUntil(dateStr){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = new Date(dateStr); d.setHours(0,0,0,0);
+    return Math.round((d - today) / 86400000);
+  }
+
+  // Expired = today or earlier (dd <= 0)
+  function expiryStateForSent(expiryDate){
+    if(!expiryDate) return "none";
+    const dd = daysUntil(expiryDate);
+    if(dd <= 0) return "expired";
+    if(dd <= RED_DAYS) return "red";
+    if(dd <= ORANGE_DAYS) return "amber";
+    return "notsoon";
+  }
+
+  function formatDateTime(iso){
+    const d = new Date(iso);
+    return d.toLocaleString([], {year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }
+
+  function escapeHtml(s){
+    return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+
+  /********************
+   * Firebase-backed rows
+   ********************/
+  let ALL_ROWS = [];
+  let unsubscribe = null;
+
+  function startListening(){
+    if(typeof window._firebase?.listen !== "function"){
+      $("syncPill").textContent = "Sync error";
+      toast("Firebase not loaded.");
+      return;
+    }
+    $("syncPill").textContent = "Realtime sync";
+    if(typeof unsubscribe === "function") unsubscribe();
+
+    unsubscribe = window._firebase.listen((rows)=>{
+      ALL_ROWS = rows;
+      renderAlerts();
+      applyFiltersAndRender();
+    });
+  }
+
+  function getRows(){ return ALL_ROWS; }
+
+  /********************
+   * Tabs: carts + views
+   ********************/
+  const cartCrash = $("cartCrash");
+  const cartAna = $("cartAna");
+  const cartCode = $("cartCode");
+
+  function setCartActive(btn){
+    [cartCrash, cartAna, cartCode].forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  function switchCart(cartKey, btn){
+    if(typeof window._firebase?.setCart !== "function"){
+      toast("Firebase not loaded.");
+      return;
+    }
+    window._firebase.setCart(cartKey);
+    setCartActive(btn);
+    startListening();
+  }
+
+  cartCrash.addEventListener("click", ()=> switchCart("crash", cartCrash));
+  cartAna.addEventListener("click", ()=> switchCart("ana", cartAna));
+  cartCode.addEventListener("click", ()=> switchCart("code", cartCode));
+
+  const tabEntry = $("tabEntry");
+  const tabReport = $("tabReport");
+  const viewEntry = $("viewEntry");
+  const viewReport = $("viewReport");
+
+  function showEntry(){
+    tabEntry.classList.add("active");
+    tabReport.classList.remove("active");
+    viewEntry.classList.remove("hidden");
+    viewReport.classList.add("hidden");
+  }
+  function showReport(){
+    tabReport.classList.add("active");
+    tabEntry.classList.remove("active");
+    viewReport.classList.remove("hidden");
+    viewEntry.classList.add("hidden");
+    applyFiltersAndRender();
+  }
+
+  tabEntry.addEventListener("click", showEntry);
+  tabReport.addEventListener("click", showReport);
+
+  /********************
+   * Entry: scan/type cleanup
+   ********************/
+  const scanIdsDigits = ["pharmacistBadge","nurseBadge","sentCrashCart","returnCrashCart"];
+  scanIdsDigits.forEach(id=>{
+    const el = $(id);
+    el.addEventListener("blur", ()=> el.value = digitsOnly(el.value));
+    el.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        el.value = digitsOnly(el.value);
+      }
+    });
+  });
+
+  /********************
+   * Exchange rule + checkbox password ("none")
+   ********************/
+  const noCrashSent = $("noCrashSent");
+  let allowNoCrashSent = false;
+
+  function setSentEnabled(enabled){
+    const ids = ["sentCrashCart","firstMedication","expiryDate"];
+    ids.forEach(id=>{
+      const el = $(id);
+      el.disabled = !enabled;
+      if(!enabled) el.value = "";
+    });
+  }
+
+  noCrashSent.addEventListener("change", ()=>{
+    if(noCrashSent.checked){
+      const pwd = prompt("Enter password:");
+      if(pwd !== "none"){
+        noCrashSent.checked = false;
+        allowNoCrashSent = false;
+        setSentEnabled(true);
+        toast("Wrong password.");
+        return;
+      }
+      allowNoCrashSent = true;
+      setSentEnabled(false);
+      toast("Enabled.");
+    } else {
+      allowNoCrashSent = false;
+      setSentEnabled(true);
+    }
+  });
+
+  /********************
+   * Clear / Refresh / Save
+   ********************/
+  function clearAllFields(){
+    $("nurseLocation").value = "";
+    $("pharmacistBadge").value = "";
+    $("nurseBadge").value = "";
+
+    $("sentCrashCart").value = "";
+    $("firstMedication").value = "";
+    $("expiryDate").value = "";
+
+    $("returnCrashCart").value = "";
+    $("returnReason").value = "";
+
+    // reset exception mode
+    allowNoCrashSent = false;
+    noCrashSent.checked = false;
+    setSentEnabled(true);
+  }
+
+  $("btnClear").addEventListener("click", ()=>{
+    clearAllFields();
+    toast("Cleared.");
+    $("nurseLocation").focus();
+  });
+
+  $("btnRefresh").addEventListener("click", ()=>{
+    renderAlerts();
+    applyFiltersAndRender();
+    toast("Refreshed.");
+  });
+
+  async function addLog(record){
+    await window._firebase.add(record);
+  }
+
+  $("btnSave").addEventListener("click", async ()=>{
+    const nurseLocation = $("nurseLocation").value.trim();
+    const pharmacistBadge = digitsOnly($("pharmacistBadge").value);
+    const nurseBadge = digitsOnly($("nurseBadge").value);
+
+    if(!nurseLocation) return toast("Nurse Location is required.");
+    if(!pharmacistBadge) return toast("Pharmacist badge is required.");
+    if(!nurseBadge) return toast("Nurse badge is required.");
+
+    const sentCrash = digitsOnly($("sentCrashCart").value);
+    const returnCrash = digitsOnly($("returnCrashCart").value);
+    const returnReason = $("returnReason").value;
+
+    // Return always required
+    if(!returnCrash) return toast("Return crash cart is required.");
+    if(!returnReason) return toast("Return reason is required.");
+
+    const exception = allowNoCrashSent;
+
+    // Exchange required by default (Sent required unless exception)
+    if(!exception){
+      if(!sentCrash) return toast("Sent crash cart is required (exchange).");
+      const med = $("firstMedication").value;
+      const exp = $("expiryDate").value;
+      if(!med) return toast("Medication is required for Sent (exchange).");
+      if(!exp) return toast("Medication expiry is required for Sent (exchange).");
+    }
+
+    const now = isoNow();
+
+    try{
+      // Save RETURN (always)
+      await addLog({
+        timestamp: now,
+        action: "return",
+        crashNumber: returnCrash,
+        location: nurseLocation,
+        pharmacistBadge,
+        nurseBadge,
+        returnReason: returnReason,
+        firstMedication: "",
+        expiryDate: ""
+      });
+
+      // Save SENT (only if exchange)
+      if(!exception){
+        await addLog({
+          timestamp: now,
+          action: "sent",
+          crashNumber: sentCrash,
+          location: nurseLocation,
+          pharmacistBadge,
+          nurseBadge,
+          returnReason: "",
+          firstMedication: $("firstMedication").value,
+          expiryDate: $("expiryDate").value
+        });
+      }
+
+      toast("Saved.");
+      clearAllFields();
+      $("nurseLocation").focus();
+    } catch(e){
+      console.error(e);
+      toast("Save failed. Check Firebase rules/network.");
+    }
+  });
+
+  /********************
+   * Alerts: based on latest record per crash cart
+   ********************/
+  function latestByCrashCart(rows){
+    const map = new Map();
+    for (const r of rows){
+      if(!r.crashNumber) continue;
+      if (!map.has(r.crashNumber)){
+        map.set(r.crashNumber, r); // rows are newest-first
+      }
+    }
+    return [...map.values()];
+  }
+
+  function renderAlerts(){
+    const rows = getRows();
+    const latest = latestByCrashCart(rows);
+
+    // only if latest status is SENT and has expiry
+    const sentLatest = latest.filter(r=> r.action === "sent" && r.expiryDate && r.firstMedication);
+    const alerts = [];
+
+    for(const r of sentLatest){
+      const st = expiryStateForSent(r.expiryDate);
+      const dd = daysUntil(r.expiryDate);
+
+      if(st === "expired"){
+        alerts.push({
+          type: "red",
+          sort: -9999,
+          title: `Crash ${r.crashNumber} — EXPIRED`,
+          meta: `${r.firstMedication} • ${r.expiryDate} • sent to ${r.location}`
+        });
+      } else if(st === "red"){
+        alerts.push({
+          type: "red",
+          sort: dd,
+          title: `Crash ${r.crashNumber} — ${dd} day(s) left`,
+          meta: `${r.firstMedication} • ${r.expiryDate} • sent to ${r.location}`
+        });
+      } else if(st === "amber"){
+        alerts.push({
+          type: "amber",
+          sort: dd,
+          title: `Crash ${r.crashNumber} — ${dd} day(s) left`,
+          meta: `${r.firstMedication} • ${r.expiryDate} • sent to ${r.location}`
+        });
+      }
+    }
+
+    // sort: expired/red first, then amber by soonest
+    alerts.sort((a,b)=>{
+      const pr = (x)=> x.type === "red" ? 0 : 1;
+      if(pr(a) !== pr(b)) return pr(a) - pr(b);
+      return (a.sort ?? 9999) - (b.sort ?? 9999);
+    });
+
+    const box = $("alertsList");
+    if(!alerts.length){
+      box.innerHTML = `<div class="hint">No expiry alerts.</div>`;
+      return;
+    }
+
+    box.innerHTML = alerts.slice(0,24).map(a=>`
+      <div class="alertItem">
+        <span class="dot ${a.type}"></span>
+        <div>
+          <div class="alertText"><b>${escapeHtml(a.title)}</b></div>
+          <div class="alertMeta">${escapeHtml(a.meta)}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  /********************
+   * Report: filtering / sorting / paging
+   ********************/
+  const filters = {
+    crash: $("fCrash"),
+    action: $("fAction"),
+    location: $("fLocation"),
+    badge: $("fBadge"),
+    returnReason: $("fReturnReason"),
+    medication: $("fMedication"),
+    expiryOn: $("fExpiryOn"),
+    expiryStatus: $("fExpiryStatus"),
+    from: $("fFrom"),
+    to: $("fTo"),
+    pageSize: $("pageSize")
+  };
+
+  let sortKey = "timestamp";
+  let sortDir = "desc";
+  let page = 1;
+
+  function matchText(hay, needle){
+    if(!needle) return true;
+    return (hay || "").toLowerCase().includes(needle.toLowerCase());
+  }
+
+  function inDateRange(iso, fromDate, toDate){
+    if(!fromDate && !toDate) return true;
+    const d = yyyyMmDd(iso);
+    if(fromDate && d < fromDate) return false;
+    if(toDate && d > toDate) return false;
+    return true;
+  }
+
+  function applyFilters(rows){
+    const fCrash = filters.crash.value.trim();
+    const fAction = filters.action.value;
+    const fLoc = filters.location.value.trim();
+    const fBadge = digitsOnly(filters.badge.value.trim());
+    const fRet = filters.returnReason.value;
+    const fMed = filters.medication.value;
+    const fExpOn = filters.expiryOn.value;
+    const fExpSt = filters.expiryStatus.value;
+    const fFrom = filters.from.value;
+    const fTo = filters.to.value;
+
+    return rows.filter(r=>{
+      if(fCrash && !matchText(r.crashNumber, fCrash)) return false;
+      if(fAction && r.action !== fAction) return false;
+      if(fLoc && !matchText(r.location, fLoc)) return false;
+
+      if(fBadge){
+        const b1 = digitsOnly(r.pharmacistBadge);
+        const b2 = digitsOnly(r.nurseBadge);
+        if(!matchText(b1, fBadge) && !matchText(b2, fBadge)) return false;
+      }
+
+      if(fRet){
+        if(r.action !== "return") return false;
+        if(r.returnReason !== fRet) return false;
+      }
+
+      if(fMed){
+        if(r.action !== "sent") return false;
+        if(r.firstMedication !== fMed) return false;
+      }
+
+      if(fExpOn){
+        if(r.action !== "sent") return false;
+        if(r.expiryDate !== fExpOn) return false;
+      }
+
+      if(fExpSt){
+        if(r.action !== "sent") return false;
+        const st = expiryStateForSent(r.expiryDate);
+        if(fExpSt === "expired" && st !== "expired") return false;
+        if(fExpSt === "red" && st !== "red") return false;
+        if(fExpSt === "amber" && st !== "amber") return false;
+        if(fExpSt === "notsoon" && st !== "notsoon") return false;
+      }
+
+      if(!inDateRange(r.timestamp, fFrom, fTo)) return false;
+
+      return true;
+    });
+  }
+
+  function sortRows(rows){
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    const getVal = (r)=>{
+      if(sortKey === "timestamp") return r.timestamp || "";
+      if(sortKey === "crashNumber") return r.crashNumber || "";
+      if(sortKey === "action") return r.action || "";
+      if(sortKey === "location") return r.location || "";
+      if(sortKey === "pharmacistBadge") return r.pharmacistBadge || "";
+      if(sortKey === "nurseBadge") return r.nurseBadge || "";
+      if(sortKey === "firstMedication") return r.firstMedication || "";
+      if(sortKey === "expiryDate") return r.expiryDate || "";
+      if(sortKey === "returnReason") return r.returnReason || "";
+      return "";
+    };
+
+    return [...rows].sort((a,b)=>{
+      let va = getVal(a);
+      let vb = getVal(b);
+
+      if(sortKey === "crashNumber"){
+        const na = parseInt(va,10); const nb = parseInt(vb,10);
+        if(!Number.isNaN(na) && !Number.isNaN(nb)) return (na - nb) * dir;
+      }
+
+      if(sortKey === "expiryDate"){
+        va = va || "9999-12-31";
+        vb = vb || "9999-12-31";
+      }
+
+      return String(va).localeCompare(String(vb)) * dir;
+    });
+  }
+
+  function crashCartColorClassForRow(r){
+    if(r.action === "return") return "cc-green";
+    const st = expiryStateForSent(r.expiryDate);
+    if(st === "expired" || st === "red") return "cc-red";
+    if(st === "amber") return "cc-amber";
+    return "cc-gray";
+  }
+
+  function updateSummaryAllRows(){
+    const rows = getRows();
+    const latestByCart = new Map();
+    for(const r of rows){
+      if(!r.crashNumber) continue;
+      if(!latestByCart.has(r.crashNumber)){
+        latestByCart.set(r.crashNumber, r); // newest-first
+      }
+    }
+
+    let available = 0, sent = 0, red = 0, amber = 0;
+
+    for(const r of latestByCart.values()){
+      if(r.action === "return"){
+        available++;
+      } else if(r.action === "sent"){
+        sent++;
+        const st = expiryStateForSent(r.expiryDate);
+        if(st === "expired" || st === "red") red++;
+        else if(st === "amber") amber++;
+      }
+    }
+
+    $("sumAvailable").textContent = available;
+    $("sumSent").textContent = sent;
+    $("sumRed").textContent = red;
+    $("sumAmber").textContent = amber;
+  }
+
+  function renderTable(rows){
+    const size = parseInt(filters.pageSize.value,10) || 20;
+    const total = rows.length;
+    const pages = Math.max(1, Math.ceil(total / size));
+    if(page > pages) page = pages;
+    if(page < 1) page = 1;
+
+    const start = (page - 1) * size;
+    const slice = rows.slice(start, start + size);
+
+    $("resultCount").textContent = `${total} result(s)`;
+    $("pageLabel").textContent = String(page);
+    $("pageMeta").textContent = `Page ${page} / ${pages}`;
+
+    const tbody = $("tbody");
+    tbody.innerHTML = slice.map(r=>{
+      const ccClass = crashCartColorClassForRow(r);
+      return `
+        <tr>
+          <td>${escapeHtml(formatDateTime(r.timestamp))}</td>
+          <td><span class="ccPill ${ccClass}">${escapeHtml(r.crashNumber)}</span></td>
+          <td>${escapeHtml(r.action)}</td>
+          <td>${escapeHtml(r.location)}</td>
+          <td class="mono">${escapeHtml(r.pharmacistBadge || "")}</td>
+          <td class="mono">${escapeHtml(r.nurseBadge || "")}</td>
+          <td>${escapeHtml(r.firstMedication || "")}</td>
+          <td>${escapeHtml(r.expiryDate || "")}</td>
+          <td>${escapeHtml(r.returnReason || "")}</td>
+        </tr>
+      `;
+    }).join("");
+
+    $("btnPrev").disabled = page <= 1;
+    $("btnNext").disabled = page >= pages;
+  }
+
+  function applyFiltersAndRender(){
+    updateSummaryAllRows();
+
+    let rows = applyFilters(getRows());
+    rows = sortRows(rows);
+    renderTable(rows);
+  }
+
+  // Filter listeners
+  Object.values(filters).forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", ()=>{ page = 1; applyFiltersAndRender(); });
+    el.addEventListener("change", ()=>{ page = 1; applyFiltersAndRender(); });
+  });
+
+  $("btnResetFilters").addEventListener("click", ()=>{
+    $("fCrash").value = "";
+    $("fAction").value = "";
+    $("fLocation").value = "";
+    $("fBadge").value = "";
+    $("fReturnReason").value = "";
+    $("fMedication").value = "";
+    $("fExpiryOn").value = "";
+    $("fExpiryStatus").value = "";
+    $("fFrom").value = "";
+    $("fTo").value = "";
+    $("pageSize").value = "20";
+    sortKey = "timestamp"; sortDir = "desc";
+    page = 1;
+    applyFiltersAndRender();
+    toast("Filters reset.");
+  });
+
+  // Sorting
+  document.querySelectorAll("thead th").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key = th.getAttribute("data-key");
+      if(!key) return;
+      if(sortKey === key){
+        sortDir = (sortDir === "asc") ? "desc" : "asc";
+      } else {
+        sortKey = key;
+        sortDir = (key === "timestamp") ? "desc" : "asc";
+      }
+      page = 1;
+      applyFiltersAndRender();
+    });
+  });
+
+  $("btnPrev").addEventListener("click", ()=>{ page--; applyFiltersAndRender(); });
+  $("btnNext").addEventListener("click", ()=>{ page++; applyFiltersAndRender(); });
+
+  /********************
+   * Export CSV
+   ********************/
+  function toCsv(rows){
+    const headers = ["DateTime","CrashCart","Type","Location","PharmacistBadge","NurseBadge","Medication","MedicationExpiry","ReturnReason"];
+    const lines = [headers.join(",")];
+    for(const r of rows){
+      const vals = [
+        formatDateTime(r.timestamp),
+        r.crashNumber,
+        r.action,
+        r.location,
+        r.pharmacistBadge || "",
+        r.nurseBadge || "",
+        r.firstMedication || "",
+        r.expiryDate || "",
+        r.returnReason || ""
+      ].map(v=>{
+        const s = String(v ?? "");
+        return `"${s.replace(/"/g,'""')}"`;
+      });
+      lines.push(vals.join(","));
+    }
+    return lines.join("\n");
+  }
+
+  $("btnExportCsv").addEventListener("click", ()=>{
+    const rows = sortRows(applyFilters(getRows()));
+    const csv = toCsv(rows);
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cart_report_${yyyyMmDd(new Date())}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast("CSV exported.");
+  });
+
+  /********************
+   * Print
+   ********************/
+  $("btnPrint").addEventListener("click", ()=> window.print());
+  $("btnPrintReport").addEventListener("click", ()=> window.print());
+
+  /********************
+   * Wipe All (per-cart)
+   ********************/
+  $("btnWipe").addEventListener("click", async ()=>{
+    const pwd = prompt("Enter wipe password:");
+    if (pwd === null) return;
+    if (pwd !== "Phwipe1") { toast("Wrong password."); return; }
+
+    const ok = confirm("Wipe ALL data for this tab? This cannot be undone.");
+    if(!ok) return;
+
+    try{
+      await window._firebase.wipe();
+      toast("All data wiped.");
+    } catch(e){
+      console.error(e);
+      toast("Wipe failed. Check Firebase rules/network.");
+    }
+  });
+
+  /********************
+   * Init
+   ********************/
+  showEntry();
+  setSentEnabled(true);
+  // start on Crash Cart
+  if(window._firebase?.setCart){
+    window._firebase.setCart("crash");
+  }
+  startListening();
+</script>
+</body>
+</html>
