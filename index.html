@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>SRT Translator</title>
 <style>
-    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
-    textarea { width: 100%; height: 200px; margin-bottom: 10px; }
-    button { padding: 10px 20px; margin: 5px 0; }
+body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+select, button { padding: 10px; margin: 5px 0; }
 </style>
 </head>
 <body>
@@ -15,11 +15,26 @@
 
 <input type="file" id="fileInput" accept=".srt"><br><br>
 
+<label>From:</label>
+<select id="sourceLang">
+  <option value="auto">Auto</option>
+  <option value="hi">Hindi</option>
+  <option value="ar">Arabic</option>
+  <option value="en">English</option>
+</select>
+
+<label>To:</label>
+<select id="targetLang">
+  <option value="en">English</option>
+  <option value="ar">Arabic</option>
+  <option value="hi">Hindi</option>
+</select>
+
 <textarea id="inputText" placeholder="Paste SRT text here..."></textarea>
 
 <br>
 <button onclick="translateSRT()">Translate</button>
-<button onclick="downloadSRT()">Download Translated SRT</button>
+<button onclick="downloadSRT()">Download SRT</button>
 
 <textarea id="outputText" placeholder="Translated output..."></textarea>
 
@@ -35,13 +50,27 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     reader.readAsText(e.target.files[0]);
 });
 
-// Fake translation function (replace with API)
+// Real translation (LibreTranslate)
 async function translateText(text) {
-    // Example: reverse text (replace with real API call)
-    return text.split("").reverse().join("");
+    const source = document.getElementById("sourceLang").value;
+    const target = document.getElementById("targetLang").value;
+
+    const res = await fetch("https://libretranslate.de/translate", {
+        method: "POST",
+        body: JSON.stringify({
+            q: text,
+            source: source,
+            target: target,
+            format: "text"
+        }),
+        headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await res.json();
+    return data.translatedText;
 }
 
-// Translate SRT while keeping timestamps
+// Translate SRT
 async function translateSRT() {
     const input = document.getElementById('inputText').value;
     const lines = input.split("\n");
@@ -65,7 +94,7 @@ async function translateSRT() {
     document.getElementById('outputText').value = translatedText;
 }
 
-// Download result
+// Download
 function downloadSRT() {
     const blob = new Blob([translatedText], { type: "text/plain" });
     const link = document.createElement("a");
