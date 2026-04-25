@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SRT Translator</title>
+<style>
+body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+textarea { width: 100%; height: 180px; margin-bottom: 10px; }
+select, button { padding: 10px; margin: 5px 0; }
+progress { width: 100%; height: 20px; }
+#status { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h2>SRT Translator</h2>
+
+<input type="file" id="fileInput" accept=".srt"><br><br>
+
+<label>From:</label>
+<select id="sourceLang">
+  <option value="auto">Auto</option>
+  <option value="en">English</option>
+  <option value="ar">Arabic</option>
+</select>
+
+<label>To:</label>
+<select id="targetLang">
+  <option value="ar">Arabic</option>
+  <option value="en">English</option>
+</select>
+
+<textarea id="inputText"></textarea>
+
+<button onclick="translateSRT()">Translate</button>
+<button onclick="downloadSRT()">Download</button>
+
+<p id="status"></p>
+<progress id="progressBar" value="0" max="100"></progress>
+
+<textarea id="outputText"></textarea>
+
+<script src="script.js"></script>
+</body>
+</html>
